@@ -1,5 +1,13 @@
+import Image from 'next/image';
+
 export default function Ground() {
   return (
-    <div className="absolute top-80 h-20 w-150 bg-green-500 border-2 border-green-600"></div>
+    <Image
+      src="/assets/others/ground.png"
+      height={80}
+      width={3200}
+      className="absolute top-80 z-10"
+      alt="Ground"
+    ></Image>
   );
 }

@@ -1,7 +1,8 @@
+import { forwardRef } from 'react';
 import Image from 'next/image';
 import leftIdle from '../../public/assets/character/companion-idle.png';
 
-export default function Companion() {
+const Companion = forwardRef<HTMLImageElement>(({}, ref) => {
   return (
     <Image
       src={leftIdle}
@@ -9,6 +10,10 @@ export default function Companion() {
       height={64}
       width={48}
       alt="Main character"
+      ref={ref}
     />
   );
-}
+});
+
+Companion.displayName = 'Companion';
+export default Companion;
