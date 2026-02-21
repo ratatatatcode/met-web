@@ -8,22 +8,24 @@ export default function Message() {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setPosition((p) => p - 5);
+      if (position !== -200) {
+        setPosition((p) => p - 5);
+      }
     }, 100);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [position]);
 
   return (
-    <div className="absolute">
+    <>
       <Image
         src={'/assets/others/message.png'}
         height={400}
         width={600}
         alt="Message"
-        className=""
-        style={{ transform: `translateY(${position}px)` }}
-      ></Image>
-    </div>
+        className="absolute z-50"
+        style={{ transform: `translateY(${position + 220}px)` }}
+      />
+    </>
   );
 }
