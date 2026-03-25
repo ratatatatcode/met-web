@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.moving-sky {
+  background-image: url("/assets/others/background-sky.png");
+  background-repeat: repeat-x;
+  animation: moveBackground 20s linear infinite;
+  width: 600px;
+  height: 400px;
+}
+
+@keyframes moveBackground {
+  from {
+    background-position: 0 0;
+  } to {
+    background-position: -600px 0;
+  }
+}

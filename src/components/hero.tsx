@@ -2,8 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+
+// animation:
 import idle from '../../public/assets/character/hero-idle.png';
+import rightLF from '../../public/assets/character/hero-right-lf.png';
+import rightRF from '../../public/assets/character/hero-right-rf.png';
 import leftIdle from '../../public/assets/character/hero-left-idle.png';
+import leftLF from '../../public/assets/character/hero-left-lf.png';
+import leftRF from '../../public/assets/character/hero-left-rf.png';
 
 export default function Hero({
   companionRef,
@@ -14,65 +20,110 @@ export default function Hero({
   changeState: () => void;
   hasMet: boolean;
 }) {
-  const heroRef = useRef<HTMLImageElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const pressedKeysRef = useRef<{ [key: string]: boolean }>({});
+  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const sideMovement = 5;
   const [position, setPosition] = useState(0);
   const [animationState, setAnimationState] = useState(idle);
 
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+    if (!hasMet) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      pressedKeysRef.current[e.key] = true;
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      pressedKeysRef.current[e.key] = false;
+
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+
       if (e.key === 'ArrowLeft') {
-        setPosition((p) => p - sideMovement);
         setAnimationState(leftIdle);
       }
 
       if (e.key === 'ArrowRight') {
-        setPosition((p) => p + sideMovement);
         setAnimationState(idle);
       }
     };
 
-    if (hasMet) {
-      window.addEventListener('keydown', handleKeyPress);
-    }
+    const interval = setInterval(() => {
+      if (pressedKeysRef.current['ArrowLeft']) {
+        setPosition((p) => p - sideMovement);
+        setAnimationState((prev) => (prev === leftRF ? leftLF : leftRF));
+
+        if (animationTimeoutRef.current) {
+          clearTimeout(animationTimeoutRef.current);
+        }
+
+        animationTimeoutRef.current = setTimeout(() => {
+          if (!pressedKeysRef.current['ArrowLeft']) {
+            setAnimationState(leftIdle);
+          }
+        }, 150);
+      }
+
+      if (pressedKeysRef.current['ArrowRight']) {
+        setPosition((p) => p + sideMovement);
+        setAnimationState((prev) => (prev === rightRF ? rightLF : rightRF));
+
+        if (animationTimeoutRef.current) {
+          clearTimeout(animationTimeoutRef.current);
+        }
+
+        animationTimeoutRef.current = setTimeout(() => {
+          if (!pressedKeysRef.current['ArrowRight']) {
+            setAnimationState(idle);
+          }
+        }, 150);
+      }
+    }, 90);
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      clearInterval(interval);
+
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
     };
   }, [hasMet]);
 
-  // Test ref:
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (companionRef.current && heroRef.current) {
-        const heroRect = heroRef.current.getBoundingClientRect();
-        const companionRect = companionRef.current.getBoundingClientRect();
+    if (!companionRef.current || !heroRef.current) return;
 
-        if (
-          heroRect.x < companionRect.x + companionRect.width &&
-          heroRect.x + heroRect.width > companionRect.x &&
-          heroRect.y < companionRect.y + companionRect.height &&
-          heroRect.y + heroRect.height > companionRect.y
-        ) {
-          changeState();
-        }
-      }
-    }, 1000);
+    const heroRect = heroRef.current.getBoundingClientRect();
+    const companionRect = companionRef.current.getBoundingClientRect();
 
-    return () => clearInterval(intervalId);
-  }, [companionRef, changeState]);
+    if (
+      heroRect.x < companionRect.x + companionRect.width &&
+      heroRect.x + heroRect.width > companionRect.x &&
+      heroRect.y < companionRect.y + companionRect.height &&
+      heroRect.y + heroRect.height > companionRect.y
+    ) {
+      changeState();
+    }
+  }, [position, companionRef, changeState]);
 
   return (
-    <Image
-      src={animationState}
+    <div
+      ref={heroRef}
       className="absolute top-64.25 left-10"
-      height={64}
-      width={48}
       style={{
         transform: `translateX(${position}px)`,
+        width: '48px',
+        height: '64px',
       }}
-      alt="Main character"
-      ref={heroRef}
-    />
+    >
+      <Image src={animationState} height={64} width={48} alt="Main character" />
+    </div>
   );
 }
